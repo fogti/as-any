@@ -33,65 +33,62 @@ fn lol() {
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-use core::{any::Any as StdAny, fmt};
+use core::{any::Any, fmt};
 
 #[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
-pub trait Any: StdAny {}
-
-impl<T: StdAny> Any for T {}
-
-// source: https://github.com/chris-morgan/anymap/blob/master/src/any.rs
-/// This trait is an extension trait to [`Any`], and adds methods for unchecked downcasts
-pub trait UncheckedAnyExt: Any {
-    unsafe fn downcast_ref_unchecked<T: Any>(&self) -> &T;
-    unsafe fn downcast_mut_unchecked<T: Any>(&mut self) -> &mut T;
-    #[cfg(feature = "alloc")]
-    unsafe fn downcast_unchecked<T: Any>(self: Box<Self>) -> Box<T>;
-}
-
-#[cfg(feature = "alloc")]
-/// A trait for the conversion of an object into a boxed trait object.
-pub trait IntoBox<A: ?Sized + UncheckedAnyExt>: Any {
-    /// Convert self into the appropriate boxed form.
-    fn into_box(self) -> Box<A>;
-}
-
+/// This trait is an extension trait to [`Any`], and adds methods to retrieve a `&dyn Any`
 pub trait AsAny: Any {
-    fn as_any(&self) -> &dyn StdAny;
-    fn as_any_mut(&mut self) -> &mut dyn StdAny;
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 
     #[doc(hidden)]
-    fn as_my_any(&self) -> &dyn Any;
+    fn as_my_any(&self) -> &dyn AsAny;
 
     #[doc(hidden)]
-    fn as_my_any_mut(&mut self) -> &mut dyn Any;
+    fn as_my_any_mut(&mut self) -> &mut dyn AsAny;
 
     /// Gets the type name of `self`
     fn type_name(&self) -> &'static str;
 }
 
-impl<T: StdAny> AsAny for T {
+// source: https://github.com/chris-morgan/anymap/blob/master/src/any.rs
+/// This trait is an extension trait to [`AsAny`], and adds methods for unchecked downcasts
+pub trait UncheckedAnyExt: AsAny {
+    unsafe fn downcast_ref_unchecked<T: AsAny>(&self) -> &T;
+    unsafe fn downcast_mut_unchecked<T: AsAny>(&mut self) -> &mut T;
+    #[cfg(feature = "alloc")]
+    unsafe fn downcast_unchecked<T: AsAny>(self: Box<Self>) -> Box<T>;
+}
+
+#[cfg(feature = "alloc")]
+/// A trait for the conversion of an object into a boxed trait object.
+pub trait IntoBox<A: ?Sized + UncheckedAnyExt>: AsAny {
+    /// Convert self into the appropriate boxed form.
+    fn into_box(self) -> Box<A>;
+}
+
+impl<T: Any> AsAny for T {
     #[inline(always)]
-    fn as_any(&self) -> &dyn StdAny {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 
     #[inline(always)]
-    fn as_any_mut(&mut self) -> &mut dyn StdAny {
+    fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
 
     #[doc(hidden)]
     #[inline(always)]
-    fn as_my_any(&self) -> &dyn Any {
+    fn as_my_any(&self) -> &dyn AsAny {
         self
     }
 
     #[doc(hidden)]
     #[inline(always)]
-    fn as_my_any_mut(&mut self) -> &mut dyn Any {
+    fn as_my_any_mut(&mut self) -> &mut dyn AsAny {
         self
     }
 
@@ -133,12 +130,12 @@ pub trait Downcast: AsAny {
 
     #[inline]
     unsafe fn downcast_ref_unchecked<T: Any>(&self) -> &T {
-        self.as_my_any().downcast_ref_unchecked()
+        UncheckedAnyExt::downcast_ref_unchecked(self.as_my_any())
     }
 
     #[inline]
     unsafe fn downcast_mut_unchecked<T: Any>(&mut self) -> &mut T {
-        self.as_my_any_mut().downcast_mut_unchecked()
+        UncheckedAnyExt::downcast_mut_unchecked(self.as_my_any_mut())
     }
 }
 
@@ -176,20 +173,12 @@ macro_rules! implement {
                 Box::new(self)
             }
         }
+
+        impl Downcast for dyn $base $(+ $bounds)* {}
     }
 }
-
-implement!(Any);
-implement!(Any + Send);
-implement!(Any + Sync);
-implement!(Any + Send + Sync);
 
 implement!(AsAny);
 implement!(AsAny + Send);
 implement!(AsAny + Sync);
 implement!(AsAny + Send + Sync);
-
-impl Downcast for dyn AsAny {}
-impl Downcast for dyn AsAny + Send {}
-impl Downcast for dyn AsAny + Sync {}
-impl Downcast for dyn AsAny + Send + Sync {}

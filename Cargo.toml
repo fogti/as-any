@@ -1,6 +1,6 @@
 [package]
 name = "as-any"
-version = "0.1.0"
+version = "0.2.0"
 description = "provide the AsAny trait"
 categories = ["no-std", "rust-patterns"]
 authors = ["Erik Zscheile <zseri.devel@ytrizja.de>"]
