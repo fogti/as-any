@@ -3,7 +3,6 @@ name = "as-any"
 version = "0.2.0"
 description = "provide the AsAny trait"
 categories = ["no-std", "rust-patterns"]
-authors = ["Erik Zscheile <zseri.devel@ytrizja.de>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/reclutch-nursery/as-any"
