@@ -12,17 +12,12 @@ trait Custom: AsAny {
     // whatever you like to put inside of your trait
 }
 
-// implements the downcasting methods
-impl as_any::Downcast for dyn Custom {}
-impl as_any::Downcast for dyn Custom + Send {}
-impl as_any::Downcast for dyn Custom + Sync {}
-impl as_any::Downcast for dyn Custom + Send + Sync {}
-
 impl Custom for Test {}
 
 fn lol() {
     let x = Test;
     let y: &dyn Custom = &x;
+    // With (extension) trait `Downcast` in scope.
     y.downcast_ref::<Test>().unwrap();
 }
 ```
@@ -173,10 +168,9 @@ macro_rules! implement {
                 Box::new(self)
             }
         }
-
-        impl Downcast for dyn $base $(+ $bounds)* {}
     }
 }
+impl<T: ?Sized + AsAny> Downcast for T {}
 
 implement!(AsAny);
 implement!(AsAny + Send);
