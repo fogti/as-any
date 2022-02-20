@@ -10,7 +10,6 @@ repository = "https://github.com/smol-rs/as-any"
 [dependencies]
 
 [features]
-alloc = []
 
 [package.metadata.docs.rs]
 all-features = true

@@ -25,13 +25,7 @@ fn lol() {
 
 #![no_std]
 
-#[cfg(feature = "alloc")]
-extern crate alloc;
-
 use core::{any::Any, fmt};
-
-#[cfg(feature = "alloc")]
-use alloc::boxed::Box;
 
 /// This trait is an extension trait to [`Any`], and adds methods to retrieve a `&dyn Any`
 pub trait AsAny: Any {
@@ -46,22 +40,6 @@ pub trait AsAny: Any {
 
     /// Gets the type name of `self`
     fn type_name(&self) -> &'static str;
-}
-
-// source: https://github.com/chris-morgan/anymap/blob/master/src/any.rs
-/// This trait is an extension trait to [`AsAny`], and adds methods for unchecked downcasts
-pub trait UncheckedAnyExt: AsAny {
-    unsafe fn downcast_ref_unchecked<T: AsAny>(&self) -> &T;
-    unsafe fn downcast_mut_unchecked<T: AsAny>(&mut self) -> &mut T;
-    #[cfg(feature = "alloc")]
-    unsafe fn downcast_unchecked<T: AsAny>(self: Box<Self>) -> Box<T>;
-}
-
-#[cfg(feature = "alloc")]
-/// A trait for the conversion of an object into a boxed trait object.
-pub trait IntoBox<A: ?Sized + UncheckedAnyExt>: AsAny {
-    /// Convert self into the appropriate boxed form.
-    fn into_box(self) -> Box<A>;
 }
 
 impl<T: Any> AsAny for T {
@@ -122,16 +100,6 @@ pub trait Downcast: AsAny {
     {
         self.as_any_mut().downcast_mut()
     }
-
-    #[inline]
-    unsafe fn downcast_ref_unchecked<T: Any>(&self) -> &T {
-        UncheckedAnyExt::downcast_ref_unchecked(self.as_my_any())
-    }
-
-    #[inline]
-    unsafe fn downcast_mut_unchecked<T: Any>(&mut self) -> &mut T {
-        UncheckedAnyExt::downcast_mut_unchecked(self.as_my_any_mut())
-    }
 }
 
 macro_rules! implement {
@@ -140,32 +108,6 @@ macro_rules! implement {
             #[inline]
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 f.pad(stringify!($base $(+ $bounds)*))
-            }
-        }
-
-        impl UncheckedAnyExt for dyn $base $(+ $bounds)* {
-            #[inline]
-            unsafe fn downcast_ref_unchecked<T: 'static>(&self) -> &T {
-                &*(self as *const Self as *const T)
-            }
-
-            #[inline]
-            unsafe fn downcast_mut_unchecked<T: 'static>(&mut self) -> &mut T {
-                &mut *(self as *mut Self as *mut T)
-            }
-
-            #[cfg(feature = "alloc")]
-            #[inline]
-            unsafe fn downcast_unchecked<T: 'static>(self: Box<Self>) -> Box<T> {
-                Box::from_raw(Box::into_raw(self) as *mut T)
-            }
-        }
-
-        #[cfg(feature = "alloc")]
-        impl<T: $base $(+ $bounds)*> IntoBox<dyn $base $(+ $bounds)*> for T {
-            #[inline]
-            fn into_box(self) -> Box<dyn $base $(+ $bounds)*> {
-                Box::new(self)
             }
         }
     }
