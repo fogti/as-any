@@ -1,11 +1,11 @@
 [package]
 name = "as-any"
-version = "0.2.1"
+version = "0.3.0"
 description = "provide the AsAny trait"
 categories = ["no-std", "rust-patterns"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/smol-rs/as-any"
+repository = "https://github.com/zseri/as-any"
 
 [dependencies]
 
