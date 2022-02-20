@@ -71,6 +71,9 @@ impl<T: Any> AsAny for T {
     }
 }
 
+/// This is a shim around `AaAny` to avoid some boilerplate code.
+/// It is a separate trait because it is also implemented
+/// on runtime polymorphic traits (which are `!Sized`).
 pub trait Downcast: AsAny {
     /// Returns `true` if the boxed type is the same as `T`.
     ///
