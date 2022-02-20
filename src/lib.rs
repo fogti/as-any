@@ -1,6 +1,7 @@
 /*!
 This library provides some utility traits to make working with [`Any`] smoother.
-This crate contains similiar functionality to the `downcast` crate, but simpler.
+This crate contains similiar functionality to the `downcast` crate, but simpler,
+e.g. it isn't necessary to call some macro to instantiate the downcast methods.
 
 # Usage example
 ```
@@ -24,8 +25,8 @@ fn lol() {
 **/
 
 #![no_std]
-
-use core::{any::Any, fmt};
+#![forbid(unsafe_code)]
+use core::any::Any;
 
 /// This trait is an extension trait to [`Any`], and adds methods to retrieve a `&dyn Any`
 pub trait AsAny: Any {
@@ -87,19 +88,4 @@ pub trait Downcast: AsAny {
     }
 }
 
-macro_rules! implement {
-    ($base:ident $(+ $bounds:ident)*) => {
-        impl fmt::Debug for dyn $base $(+ $bounds)* {
-            #[inline]
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                f.pad(stringify!($base $(+ $bounds)*))
-            }
-        }
-    }
-}
 impl<T: ?Sized + AsAny> Downcast for T {}
-
-implement!(AsAny);
-implement!(AsAny + Send);
-implement!(AsAny + Sync);
-implement!(AsAny + Send + Sync);
