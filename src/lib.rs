@@ -32,12 +32,6 @@ pub trait AsAny: Any {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
-    #[doc(hidden)]
-    fn as_my_any(&self) -> &dyn AsAny;
-
-    #[doc(hidden)]
-    fn as_my_any_mut(&mut self) -> &mut dyn AsAny;
-
     /// Gets the type name of `self`
     fn type_name(&self) -> &'static str;
 }
@@ -50,18 +44,6 @@ impl<T: Any> AsAny for T {
 
     #[inline(always)]
     fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-
-    #[doc(hidden)]
-    #[inline(always)]
-    fn as_my_any(&self) -> &dyn AsAny {
-        self
-    }
-
-    #[doc(hidden)]
-    #[inline(always)]
-    fn as_my_any_mut(&mut self) -> &mut dyn AsAny {
         self
     }
 
